@@ -1,5 +1,8 @@
 /** @type {import('tailwindcss').Config} */
-const plugin = require("tailwindcss/plugin");
+import plugin from "tailwindcss/plugin";
+import tailwindcssAnimate from "tailwindcss-animate";
+import daisyui from "daisyui";
+
 export default {
   darkMode: ["class"],
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
@@ -65,8 +68,8 @@ export default {
     },
   },
   plugins: [
-    require("tailwindcss-animate"),
-    require("daisyui"),
+    tailwindcssAnimate,
+    daisyui,
     plugin(function ({ addBase, theme }) {
       addBase({
         h1: { fontSize: theme("fontSize.2xl") },
