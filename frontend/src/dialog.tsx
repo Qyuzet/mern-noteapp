@@ -24,9 +24,9 @@ export function DialogDemo({ product, isOpen, onClose, handleSave, onChange }) {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Edit Product</DialogTitle>
+          <DialogTitle>Edit Task</DialogTitle>
           <DialogDescription>
-            Make changes to the product. Click save when you're done.
+            Make changes to the Task. Click save when you're done.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
