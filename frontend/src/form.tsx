@@ -119,7 +119,7 @@ export function ProfileForm({
             <FormItem>
               <FormLabel>Priority</FormLabel>
               <FormControl>
-                <Input placeholder="Price" {...field} />
+                <Input placeholder="Priority" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
