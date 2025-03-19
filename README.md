@@ -43,8 +43,8 @@ A full-stack task management application built with the MERN stack (MongoDB, Exp
 1. Clone the repository:
 
 ```bash
-git clone [your-repository-url]
-cd [your-project-name]
+git clone https://github.com/Qyuzet/mern-noteapp
+cd mern-noteapp
 ```
 
 2. Install backend dependencies:
@@ -140,8 +140,8 @@ The build process is configured to:
 
 ## License
 
-[Your License]
+MIT
 
 ## Author
 
-[Your Name]
+RIKI AWAL SYAHPUTRA
