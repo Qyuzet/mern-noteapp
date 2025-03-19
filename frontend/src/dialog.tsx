@@ -36,19 +36,19 @@ export function DialogDemo({ product, isOpen, onClose, handleSave, onChange }) {
             </Label>
             <Input
               id="name"
-              defaultValue={product?.name || ""}
-              onChange={(e) => onChange(e, "name")}
+              defaultValue={product?.task || ""}
+              onChange={(e) => onChange(e, "task")}
               className="col-span-3"
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="price" className="text-right">
-              Price
+            <Label htmlFor="priority" className="text-right">
+              Priority
             </Label>
             <Input
-              id="price"
-              defaultValue={product?.price || ""}
-              onChange={(e) => onChange(e, "price")}
+              id="priority"
+              defaultValue={product?.priority || ""}
+              onChange={(e) => onChange(e, "priority")}
               className="col-span-3"
             />
           </div>

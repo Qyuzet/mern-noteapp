@@ -22,13 +22,13 @@ import { useProductStore } from "./store/product.ts";
 import { Link } from "lucide-react";
 
 const formSchema = z.object({
-  name: z.string().min(2, {
-    message: "Name must be at least 2 characters.",
+  task: z.string().min(2, {
+    message: "Task must be at least 2 characters.",
   }),
-  price: z
+  priority: z
     .string()
     .refine((val) => !isNaN(Number(val)), {
-      message: "Price must be a valid number.",
+      message: "Priority must be a valid number.",
     })
     .transform((val) => Number(val)),
   image: z.string().min(2, {
@@ -39,7 +39,7 @@ const formSchema = z.object({
 export function ProfileForm({
   product,
 }: {
-  product?: { id: string; name: string; price: number; image: string };
+  product?: { id: string; task: string; priority: number; image: string };
 }) {
   const { createProduct, updateProduct } = useProductStore();
   const { toast } = useToast();
@@ -49,13 +49,13 @@ export function ProfileForm({
     resolver: zodResolver(formSchema),
     defaultValues: product
       ? {
-          name: product.name,
-          price: product.price.toString(),
+          task: product.task,
+          priority: product.priority.toString(),
           image: product.image,
         }
       : {
-          name: "",
-          price: "",
+          task: "",
+          priority: "",
           image: "",
         },
   });
@@ -84,7 +84,7 @@ export function ProfileForm({
       console.log("Success: ", success, "Message:", message);
       if (success) {
         // Reset the form fields
-        form.reset({ name: "", price: "", image: "" });
+        form.reset({ task: "", priority: "", image: "" });
         toast({
           title: "New Product Created",
           description: "Saved in Database",
@@ -100,12 +100,12 @@ export function ProfileForm({
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <FormField
           control={form.control}
-          name="name"
+          name="task"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Task</FormLabel>
               <FormControl>
-                <Input placeholder="Name" {...field} />
+                <Input placeholder="task" {...field} />
               </FormControl>
               <FormDescription>This is your Task.</FormDescription>
               <FormMessage />
@@ -114,7 +114,7 @@ export function ProfileForm({
         />
         <FormField
           control={form.control}
-          name="price"
+          name="priority"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Priority</FormLabel>

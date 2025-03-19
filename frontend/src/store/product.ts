@@ -4,8 +4,8 @@ import { create } from "zustand";
 
 interface Product {
   id?: string; // Assuming `id` is added by the server
-  name: string;
-  price: number;
+  task: string;
+  priority: number;
   image: string;
 }
 
@@ -31,7 +31,7 @@ export const useProductStore = create<ProductStore>((set) => ({
   setProducts: (products) => set({ products }),
 
   createProduct: async (newProduct) => {
-    if (!newProduct.name || !newProduct.price || !newProduct.image) {
+    if (!newProduct.task || !newProduct.priority || !newProduct.image) {
       return { success: false, message: "Please fill in all fields." };
     }
 

@@ -161,7 +161,7 @@ class App extends React.Component {
     this.setState((prevState) => ({
       editingProduct: {
         ...prevState.editingProduct,
-        [field]: field === "price" ? parseFloat(value) : value, // Ensure price is stored as a Number
+        [field]: field === "priority" ? parseFloat(value) : value, // Ensure priority is stored as a Number
       },
     }));
 
@@ -200,8 +200,8 @@ class App extends React.Component {
                             {this.state.data.map((product: object) => (
                               <Card
                                 key={product._id}
-                                title={product.name}
-                                text={`Priority: ${product.price}`}
+                                title={product.task}
+                                text={`Priority: ${product.priority}`}
                                 img={product.image}
                                 delete={() =>
                                   this.handleDeleteProduct(product._id)

@@ -2,11 +2,11 @@ import mongoose from "mongoose";
 
 const productSchema = new mongoose.Schema(
   {
-    name: {
+    task: {
       type: String,
       required: true,
     },
-    price: {
+    priority: {
       type: Number,
       required: true,
     },
