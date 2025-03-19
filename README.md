@@ -87,12 +87,20 @@ npm run build
 npm run start
 ```
 
-## API Endpoints
+## API Endpoints (with postman test)
 
 - GET /api/products - Retrieve all tasks
+  ![image](https://github.com/user-attachments/assets/85b34f3c-bb09-46e4-bb11-30b96faf329f)
+
 - POST /api/products - Create a new task
+  ![image](https://github.com/user-attachments/assets/d976df6d-e377-401f-9bfa-7b682519d6b5)
+
 - PUT /api/products/:id - Update a task
+  ![image](https://github.com/user-attachments/assets/96cfaf2b-2af8-4c36-abbd-60609dce0697)
+
 - DELETE /api/products/:id - Delete a task
+  ![image](https://github.com/user-attachments/assets/8242fe3c-d4c1-4f12-b7d6-b4867dbaed76)
+
 
 ## Project Structure
 
