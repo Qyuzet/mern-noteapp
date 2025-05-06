@@ -2,6 +2,8 @@
 
 A full-stack task management application built with the MERN stack (MongoDB, Express.js, React, Node.js) featuring user authentication and management.
 
+TRY HERE: https://mern-noteapp-ld4v.onrender.com/ 
+
 ## Technologies Used
 
 ### Frontend
@@ -51,8 +53,8 @@ A full-stack task management application built with the MERN stack (MongoDB, Exp
 1. Clone the repository:
 
 ```bash
-git clone [your-repository-url]
-cd [your-project-name]
+git clone https://github.com/Qyuzet/mern-noteapp
+cd mern-noteapp
 ```
 
 2. Install backend dependencies:
@@ -147,8 +149,8 @@ The build process is configured to:
 
 ## License
 
-[Your License]
+MIT
 
 ## Author
 
-[Your Name]
+RIKI AWAL SYAHPUTRA
