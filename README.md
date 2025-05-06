@@ -1,6 +1,6 @@
-# MERN Task Management Application
+# MERN Task Management Application with User Authentication
 
-A full-stack task management application built with the MERN stack (MongoDB, Express.js, React, Node.js).
+A full-stack task management application built with the MERN stack (MongoDB, Express.js, React, Node.js) featuring user authentication and management.
 
 ## Technologies Used
 
@@ -21,16 +21,24 @@ A full-stack task management application built with the MERN stack (MongoDB, Exp
 - Node.js
 - Express.js
 - MongoDB with Mongoose
-- dotenv for Environment Variables
+- JWT for Authentication
+- Bcrypt for Password Hashing
+- Nodemailer for Email Verification
+- Swagger for API Documentation
+- Docker for Deployment
 
 ## Features
 
+### Core Features
+
+- User authentication (sign-up, sign-in)
+- User management (CRUD operations)
+- Email verification for new users
+- Role-based access control
 - Create, read, update, and delete tasks
 - Priority-based task management
-- Real-time updates with toast notifications
-- Responsive design
-- Form validation
-- Database persistence
+- API documentation with Swagger
+- Docker deployment
 
 ## Prerequisites
 
@@ -100,7 +108,6 @@ npm run start
 
 - DELETE /api/products/:id - Delete a task
   ![image](https://github.com/user-attachments/assets/8242fe3c-d4c1-4f12-b7d6-b4867dbaed76)
-
 
 ## Project Structure
 

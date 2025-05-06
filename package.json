@@ -4,8 +4,14 @@
   "main": "index.js",
   "scripts": {
     "dev": "NODE_ENV=development nodemon backend/server.js",
-    "build": "npm install && npm install --prefix frontend && npm run build --prefix frontend ",
-    "start": "NODE_ENV=production node backend/server.js"
+    "dev:mongo": "USE_SEQUELIZE=false NODE_ENV=development nodemon backend/server.js",
+    "dev:sequelize": "USE_SEQUELIZE=true NODE_ENV=development nodemon backend/server.js",
+    "build": "npm install && npm install --prefix frontend && npm run build --prefix frontend",
+    "start": "NODE_ENV=production node backend/server.js",
+    "toggle-db": "node toggle-db.js",
+    "setup-sequelize": "bash install-sequelize.sh",
+    "restart": "node restart-server.js",
+    "rename-files": "bash rename-files.sh"
   },
   "type": "module",
   "keywords": [],
@@ -13,9 +19,17 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "bcryptjs": "^3.0.2",
     "dotenv": "^16.4.5",
     "express": "^4.21.1",
-    "mongoose": "^8.8.1"
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.8.1",
+    "mysql2": "^3.14.1",
+    "sequelize": "^6.37.7",
+    "sequelize-cli": "^6.6.3",
+    "sqlite3": "^5.1.7",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.7"
