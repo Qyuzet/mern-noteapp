@@ -2,6 +2,7 @@ import { useState, FormEvent } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import { toast } from "@/hooks/use-toast";
+import { AuthLayout } from "./layouts/AuthLayout";
 
 export function AuthPage() {
   const [email, setEmail] = useState("");
@@ -25,7 +26,7 @@ export function AuthPage() {
     setError("");
 
     try {
-      const response = await fetch("http://localhost:7777/api/users/login", {
+      const response = await fetch("http://localhost:7778/api/users/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -53,8 +54,8 @@ export function AuthPage() {
           description: `Welcome back, ${data.data.name}!`,
         });
 
-        // Redirect to the page the user was trying to access, or to the product page
-        const from = location.state?.from || "/product";
+        // Redirect to the page the user was trying to access, or to the tasks page
+        const from = location.state?.from || "/tasks";
         navigate(from);
       } else {
         setError(data.message || "Invalid email or password");
@@ -75,7 +76,7 @@ export function AuthPage() {
 
     try {
       const response = await fetch(
-        "http://localhost:7777/api/users/resend-verification",
+        "http://localhost:7778/api/users/resend-verification",
         {
           method: "POST",
           headers: {
@@ -118,7 +119,7 @@ export function AuthPage() {
     setError("");
 
     try {
-      const response = await fetch("http://localhost:7777/api/users", {
+      const response = await fetch("http://localhost:7778/api/users", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -161,7 +162,7 @@ export function AuthPage() {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+    <AuthLayout>
       <div className="w-full max-w-md bg-white rounded-lg shadow-md p-6">
         {/* Verification Link Alert */}
         {verificationUrl && (
@@ -348,6 +349,6 @@ export function AuthPage() {
           By continuing, you agree to our Terms of Service and Privacy Policy.
         </p>
       </div>
-    </div>
+    </AuthLayout>
   );
 }

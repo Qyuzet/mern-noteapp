@@ -28,11 +28,43 @@ export function DialogDemo({ product, isOpen, onClose, handleSave, onChange }) {
     return "High";
   };
 
+  // Safe close function to prevent white screen
+  const handleClose = () => {
+    try {
+      if (typeof onClose === "function") {
+        onClose();
+      }
+    } catch (error) {
+      console.error("Error closing dialog:", error);
+    }
+  };
+
+  // Safe save function to prevent white screen
+  const handleSaveClick = () => {
+    try {
+      // First close the dialog to prevent white screen
+      handleClose();
+
+      // Then call the save function after a short delay
+      setTimeout(() => {
+        if (typeof handleSave === "function") {
+          handleSave();
+        }
+      }, 100);
+    } catch (error) {
+      console.error("Error saving:", error);
+      handleClose();
+    }
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
-        <Dialog open={isOpen} onOpenChange={onClose}>
-          <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden rounded-xl">
+        <Dialog open={isOpen} onOpenChange={handleClose}>
+          <DialogContent
+            className="sm:max-w-[500px] p-0 overflow-hidden rounded-xl"
+            aria-describedby="dialog-description"
+          >
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -44,7 +76,10 @@ export function DialogDemo({ product, isOpen, onClose, handleSave, onChange }) {
                   <CheckCircle2 className="h-5 w-5 text-blue-600" />
                   Edit Task
                 </DialogTitle>
-                <DialogDescription className="text-gray-600">
+                <DialogDescription
+                  id="dialog-description"
+                  className="text-gray-600"
+                >
                   Make changes to your task details below.
                 </DialogDescription>
               </DialogHeader>
@@ -130,13 +165,13 @@ export function DialogDemo({ product, isOpen, onClose, handleSave, onChange }) {
                 <DialogFooter className="flex justify-end gap-2 pt-2">
                   <Button
                     variant="outline"
-                    onClick={onClose}
+                    onClick={handleClose}
                     className="border-gray-300"
                   >
                     Cancel
                   </Button>
                   <Button
-                    onClick={handleSave}
+                    onClick={handleSaveClick}
                     className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
                   >
                     Save Changes

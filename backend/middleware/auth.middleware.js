@@ -1,6 +1,5 @@
 import jwt from "jsonwebtoken";
 import { User } from "../models/index.js";
-import { getDbType } from "../config/db-toggle.js";
 
 // Middleware to protect routes
 export const protect = async (req, res, next) => {
@@ -18,20 +17,9 @@ export const protect = async (req, res, next) => {
       // Verify token
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-      // Get the current database type
-      const dbType = getDbType();
-      console.log(`[AUTH] Using database type: ${dbType}`);
-
-      // Get user from the token based on database type
-      if (dbType === "sequelize") {
-        // For Sequelize
-        req.user = await User.findByPk(decoded.id);
-        console.log(`[AUTH] Sequelize user found: ${req.user ? "Yes" : "No"}`);
-      } else {
-        // For MongoDB
-        req.user = await User.findById(decoded.id).select("-password");
-        console.log(`[AUTH] MongoDB user found: ${req.user ? "Yes" : "No"}`);
-      }
+      // Get user from the token (MongoDB only)
+      req.user = await User.findById(decoded.id).select("-password");
+      console.log(`[AUTH] User found: ${req.user ? "Yes" : "No"}`);
 
       if (!req.user) {
         return res.status(401).json({

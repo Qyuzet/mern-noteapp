@@ -1,6 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
-import { connectDB } from "./config/db-toggle.js";
+import { connectDB } from "./config/db.js";
 import path from "path";
 import { setupSwagger } from "./config/swagger.js";
 
@@ -127,13 +127,34 @@ app.use((err, req, res, next) => {
 // Start server
 const startServer = async () => {
   try {
-    // Connect to database (MongoDB or Sequelize based on toggle)
-    await connectDB();
+    console.log("Starting server...");
+    console.log("MongoDB URI:", process.env.MONGO_URI);
+
+    // Connect to MongoDB database
+    try {
+      await connectDB();
+      console.log("MongoDB connected successfully");
+    } catch (dbError) {
+      console.error("MongoDB connection error:", dbError.message);
+      if (process.env.NODE_ENV === "production") {
+        console.error(
+          "Cannot start server without database in production mode"
+        );
+        process.exit(1);
+      } else {
+        console.warn("Running in development mode without database connection");
+        console.warn("Some features may not work properly");
+      }
+    }
 
     // Start listening for requests
     app.listen(PORT, () => {
       console.log(
         `Server running in ${process.env.NODE_ENV} mode on port ${PORT}`
+      );
+      console.log(`API available at http://localhost:${PORT}/api`);
+      console.log(
+        `Swagger docs available at http://localhost:${PORT}/api-docs`
       );
     });
   } catch (error) {

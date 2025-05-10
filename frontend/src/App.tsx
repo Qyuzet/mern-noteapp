@@ -1,8 +1,7 @@
 // @ts-nocheck
 import React from "react";
 import { ProfileForm } from "./form.tsx";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/app-sidebar";
+import { AppLayout } from "./layouts/AppLayout";
 import {
   BrowserRouter,
   Route,
@@ -10,29 +9,24 @@ import {
   useNavigate,
   Navigate,
 } from "react-router-dom";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Terminal, CheckCircle2, Plus, ClipboardList } from "lucide-react";
+import { CheckCircle2, Plus, ClipboardList } from "lucide-react";
 import Card from "./card.tsx";
 import { useProductStore } from "./store/product.ts";
 import { DialogDemo } from "./dialog.tsx";
 import { Button } from "@/components/ui/button";
 import "./App.css";
 import { toast } from "@/hooks/use-toast";
-import StackIcon from "tech-stack-icons";
-import { FaCode } from "react-icons/fa6";
 import { motion, AnimatePresence } from "framer-motion";
 import { AuthPage } from "./login.tsx";
 import { ProfilePage } from "./profile.tsx";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AuthRedirect from "./components/AuthRedirect";
 
 function Welcome() {
   const navigate = useNavigate();
 
-  const handleClick = () => {
-    navigate("/tasks");
-  };
-
+  // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -53,6 +47,7 @@ function Welcome() {
     },
   };
 
+  // For non-authenticated users, show the landing page
   return (
     <motion.div
       variants={containerVariants}
@@ -71,35 +66,26 @@ function Welcome() {
 
       <motion.div
         variants={itemVariants}
-        className="mb-10 flex gap-4 flex-wrap"
+        className="mb-10 flex gap-4 flex-wrap justify-center"
       >
-        <Button
-          onClick={handleClick}
-          size="lg"
-          className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-6 rounded-xl flex items-center gap-2 text-lg"
-        >
-          <ClipboardList className="h-5 w-5" /> View My Tasks
-        </Button>
-
         <Button
           onClick={() => navigate("/login")}
           size="lg"
-          variant="outline"
-          className="border-blue-600 text-blue-600 hover:bg-blue-50 px-8 py-6 rounded-xl flex items-center gap-2 text-lg"
+          className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-6 rounded-xl flex items-center gap-2 text-lg"
         >
           Login / Register
         </Button>
 
         <a
-          href="http://localhost:7777/api-docs/"
+          href="http://localhost:7778/api-docs/"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium border border-green-600 text-green-600 hover:bg-green-50 rounded-md transition-colors"
+          className="inline-flex items-center gap-2 px-8 py-6 text-lg font-medium border border-green-600 text-green-600 hover:bg-green-50 rounded-xl transition-colors"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
+            width="20"
+            height="20"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -112,32 +98,6 @@ function Welcome() {
           </svg>
           API Docs
         </a>
-      </motion.div>
-
-      <motion.div variants={itemVariants} className="mb-8">
-        <h3 className="text-xl font-semibold text-gray-700 mb-4 flex items-center justify-center gap-2">
-          <FaCode className="text-blue-600" /> Built with modern technologies
-        </h3>
-
-        <div className="flex gap-4 justify-center flex-wrap">
-          {[
-            "reactjs",
-            "js",
-            "typescript",
-            "mongoose",
-            "mongodb",
-            "nodejs",
-            "postman",
-          ].map((tech) => (
-            <motion.div
-              key={tech}
-              whileHover={{ y: -5 }}
-              className="size-10 bg-white p-1.5 rounded-lg shadow-md"
-            >
-              <StackIcon name={tech} />
-            </motion.div>
-          ))}
-        </div>
       </motion.div>
 
       <motion.div
@@ -163,24 +123,10 @@ function Welcome() {
   );
 }
 
-function AlertBox(props: object) {
-  return (
-    <Alert className="max-w-md mx-auto mt-8 border border-amber-200 bg-amber-50">
-      <Terminal className="h-5 w-5 text-amber-600" />
-      <AlertTitle className="text-amber-800">Heads up!</AlertTitle>
-      <AlertDescription className="flex items-center justify-between">
-        <span className="text-amber-700">{props.msg}</span>
-        <img
-          className="w-20 h-15 object-cover"
-          src="cat.gif"
-          alt="Cat animation"
-        />
-      </AlertDescription>
-    </Alert>
-  );
-}
-
 class App extends React.Component {
+  // Add a class property to track fetching state
+  _isFetching = false;
+
   constructor(props: object) {
     super(props);
     this.state = {
@@ -192,46 +138,111 @@ class App extends React.Component {
     this.handleDeleteProduct = this.handleDeleteProduct.bind(this);
     this.handleEditProduct = this.handleEditProduct.bind(this);
     this.submitEditProduct = this.submitEditProduct.bind(this);
+    this.fetchData = this.fetchData.bind(this);
   }
 
   async componentDidMount(): void {
+    await this.fetchData();
+  }
+
+  async fetchData(): Promise<void> {
+    // Set a loading flag to prevent multiple simultaneous fetches
+    if (this._isFetching) {
+      console.log("Data fetch already in progress, skipping");
+      return;
+    }
+
+    this._isFetching = true;
+
     try {
+      // Only show loading state for initial load, not for refreshes
+      if (this.state.data.length === 0) {
+        this.setState({ loading: true });
+      }
+
+      // Fetch products from the store
       await useProductStore.getState().fetchProducts();
       const products = useProductStore.getState().products;
+
+      // Update state with the new data
       this.setState({
         data: products,
         loading: false,
       });
+
+      console.log("Data fetched successfully:", products.length, "items");
     } catch (error) {
+      console.error("Error fetching data:", error);
+
       this.setState({ loading: false });
-      toast({
-        title: "Error loading tasks",
-        description: "Could not load your tasks. Please try again.",
-        variant: "destructive",
-      });
+
+      // Only show error toast if we have no data
+      if (this.state.data.length === 0) {
+        toast({
+          title: "Error loading tasks",
+          description: "Could not load your tasks. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } finally {
+      // Reset the fetching flag
+      this._isFetching = false;
     }
   }
 
-  async handleDeleteProduct(pid: object) {
-    const { deleteProduct } = useProductStore.getState();
-    const { success, message } = await deleteProduct(pid);
+  async handleDeleteProduct(pid: string) {
+    if (!pid) {
+      console.log("No product ID provided for deletion");
+      return;
+    }
 
-    if (success) {
-      this.setState((prevState) => ({
-        data: prevState.data.filter((product: object) => product._id !== pid),
-      }));
+    try {
+      console.log("Deleting product with ID:", pid);
 
+      // Show loading toast
       toast({
-        title: "Task Deleted",
-        description: "Your task has been successfully removed.",
-        icon: <CheckCircle2 className="h-4 w-4 text-green-500" />,
+        title: "Deleting Task",
+        description: "Please wait while we delete your task...",
       });
-    } else {
+
+      const { deleteProduct } = useProductStore.getState();
+      const { success, message } = await deleteProduct(pid);
+
+      if (success) {
+        // Show success toast
+        toast({
+          title: "Task Deleted",
+          description: message || "Your task has been successfully removed.",
+          icon: <CheckCircle2 className="h-4 w-4 text-green-500" />,
+        });
+
+        // Refresh the data from the server
+        await this.fetchData();
+      } else {
+        toast({
+          title: "Deletion Failed",
+          description: message || "There was an error deleting your task.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error deleting product:", error);
+
       toast({
         title: "Deletion Failed",
-        description: message || "There was an error deleting your task.",
+        description:
+          error instanceof Error
+            ? error.message
+            : "There was an error deleting your task.",
         variant: "destructive",
       });
+
+      // Refresh the data to ensure UI is in sync
+      try {
+        await this.fetchData();
+      } catch (fetchError) {
+        console.error("Error refreshing data after delete error:", fetchError);
+      }
     }
   }
 
@@ -243,35 +254,70 @@ class App extends React.Component {
   }
 
   async submitEditProduct() {
-    const { updateProduct } = useProductStore.getState();
-    const { editingProduct, data } = this.state;
-    const { success, message } = await updateProduct(
-      editingProduct._id,
-      editingProduct
-    );
+    // Store the editing product before closing the dialog
+    const editingProductCopy = this.state.editingProduct
+      ? JSON.parse(JSON.stringify(this.state.editingProduct))
+      : null;
 
-    if (success) {
-      const updatedData = data.map((product) =>
-        product._id === editingProduct._id ? editingProduct : product
+    // The dialog is already closed by the dialog component
+
+    // If no product to edit, just return
+    if (!editingProductCopy || !editingProductCopy._id) {
+      console.log("No product to edit");
+      return;
+    }
+
+    try {
+      console.log("Updating product:", editingProductCopy);
+
+      // Show loading toast
+      toast({
+        title: "Updating Task",
+        description: "Please wait while we update your task...",
+      });
+
+      const { updateProduct } = useProductStore.getState();
+
+      const { success, message } = await updateProduct(
+        editingProductCopy._id,
+        editingProductCopy
       );
 
-      this.setState({
-        data: updatedData,
-        editDialog: false,
-        editingProduct: null,
-      });
+      if (success) {
+        // Show success toast
+        toast({
+          title: "Task Updated",
+          description: message || "Your changes have been saved successfully!",
+          icon: <CheckCircle2 className="h-4 w-4 text-green-500" />,
+        });
+
+        // Refresh the data from the server
+        await this.fetchData();
+      } else {
+        toast({
+          title: "Update Failed",
+          description: message || "There was an error updating your task.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error updating product:", error);
 
       toast({
-        title: "Task Updated",
-        description: "Your changes have been saved successfully!",
-        icon: <CheckCircle2 className="h-4 w-4 text-green-500" />,
-      });
-    } else {
-      toast({
         title: "Update Failed",
-        description: "There was an error updating your task.",
+        description:
+          error instanceof Error
+            ? error.message
+            : "There was an error updating your task.",
         variant: "destructive",
       });
+
+      // Refresh the data to ensure UI is in sync
+      try {
+        await this.fetchData();
+      } catch (fetchError) {
+        console.error("Error refreshing data after update error:", fetchError);
+      }
     }
   }
 
@@ -291,136 +337,137 @@ class App extends React.Component {
     return (
       <AuthProvider>
         <BrowserRouter>
-          <SidebarProvider>
-            <AppSidebar />
-            <main className="min-h-screen bg-gray-50">
-              <div className="fixed top-4 left-4 z-50 md:hidden">
-                <SidebarTrigger className="bg-white/80 backdrop-blur-sm shadow-sm border border-gray-200 rounded-md" />
-              </div>
+          <Routes>
+            <Route
+              path="/login"
+              element={
+                <AuthRedirect>
+                  <AuthPage />
+                </AuthRedirect>
+              }
+            />
+            <Route path="" element={<Navigate to="/" replace />} />
+            <Route
+              path="/"
+              element={
+                <AuthRedirect>
+                  <AppLayout>
+                    <Welcome />
+                  </AppLayout>
+                </AuthRedirect>
+              }
+            />
+            <Route
+              path="/product"
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <ProfileForm />
+                  </AppLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/user"
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <ProfilePage />
+                  </AppLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/tasks"
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <div className="space-y-8">
+                      <div className="flex justify-between items-center">
+                        <h1 className="text-2xl font-bold text-gray-800">
+                          My Tasks
+                        </h1>
+                        <Button
+                          onClick={() => (window.location.href = "/product")}
+                          className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1"
+                        >
+                          <Plus className="h-4 w-4" /> Add New Task
+                        </Button>
+                      </div>
 
-              <header className="sticky top-0 z-40 border-b border-gray-200 bg-white/80 backdrop-blur-sm">
-                <div className="flex h-14 items-center gap-4 px-4 sm:px-6 lg:px-8">
-                  <SidebarTrigger className="hidden md:flex" />
-                  <div className="flex-1"></div>
-                </div>
-              </header>
-
-              <div className="pt-8 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-                <Routes>
-                  <Route path="" element={<Welcome />} />
-                  <Route path="/login" element={<AuthPage />} />
-                  <Route
-                    path="/product"
-                    element={
-                      <ProtectedRoute>
-                        <ProfileForm />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/user"
-                    element={
-                      <ProtectedRoute>
-                        <ProfilePage />
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route
-                    path="/tasks"
-                    element={
-                      <ProtectedRoute>
-                        <div className="space-y-8">
-                          <div className="flex justify-between items-center">
-                            <h1 className="text-2xl font-bold text-gray-800">
-                              My Tasks
-                            </h1>
-                            <Button
-                              onClick={() =>
-                                (window.location.href = "/product")
-                              }
-                              className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1"
-                            >
-                              <Plus className="h-4 w-4" /> Add New Task
-                            </Button>
-                          </div>
-
-                          {loading ? (
-                            <div className="flex justify-center py-12">
-                              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-                            </div>
-                          ) : data.length === 0 ? (
-                            <div className="text-center py-12 bg-white rounded-lg shadow-sm">
-                              <ClipboardList className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                              <h3 className="text-lg font-medium text-gray-700 mb-2">
-                                No tasks found
-                              </h3>
-                              <p className="text-gray-500 mb-6">
-                                You don't have any tasks yet. Create your first
-                                task to get started.
-                              </p>
-                              <Button
-                                onClick={() =>
-                                  (window.location.href = "/product")
-                                }
-                                className="bg-blue-600 hover:bg-blue-700 text-white"
-                              >
-                                Create Task
-                              </Button>
-                            </div>
-                          ) : (
-                            <AnimatePresence>
-                              <div className="container mx-auto px-4">
-                                <motion.div
-                                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"
-                                  initial={{ opacity: 0 }}
-                                  animate={{ opacity: 1 }}
-                                >
-                                  {data.map((product: object, index) => (
-                                    <motion.div
-                                      key={product._id}
-                                      initial={{ opacity: 0, y: 20 }}
-                                      animate={{ opacity: 1, y: 0 }}
-                                      transition={{
-                                        delay: index * 0.05,
-                                        duration: 0.3,
-                                      }}
-                                      className="flex justify-center"
-                                    >
-                                      <Card
-                                        title={product.task}
-                                        text={`Priority: ${product.priority}`}
-                                        img={product.image}
-                                        delete={() =>
-                                          this.handleDeleteProduct(product._id)
-                                        }
-                                        edit={() =>
-                                          this.handleEditProduct(product)
-                                        }
-                                      />
-                                    </motion.div>
-                                  ))}
-                                </motion.div>
-                              </div>
-                            </AnimatePresence>
-                          )}
+                      {loading ? (
+                        <div className="flex justify-center py-12">
+                          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
                         </div>
-                      </ProtectedRoute>
-                    }
-                  />
-                </Routes>
-              </div>
+                      ) : data.length === 0 ? (
+                        <div className="text-center py-12 bg-white rounded-lg shadow-sm">
+                          <ClipboardList className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                          <h3 className="text-lg font-medium text-gray-700 mb-2">
+                            No tasks found
+                          </h3>
+                          <p className="text-gray-500 mb-6">
+                            You don't have any tasks yet. Create your first task
+                            to get started.
+                          </p>
+                          <Button
+                            onClick={() => (window.location.href = "/product")}
+                            className="bg-blue-600 hover:bg-blue-700 text-white"
+                          >
+                            Create Task
+                          </Button>
+                        </div>
+                      ) : (
+                        <AnimatePresence>
+                          <div className="container mx-auto px-4">
+                            <motion.div
+                              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                            >
+                              {data.map((product: object, index) => (
+                                <motion.div
+                                  key={product._id}
+                                  initial={{ opacity: 0, y: 20 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  transition={{
+                                    delay: index * 0.05,
+                                    duration: 0.3,
+                                  }}
+                                  className="flex justify-center"
+                                >
+                                  <Card
+                                    title={product.task}
+                                    text={`Priority: ${product.priority}`}
+                                    img={product.image}
+                                    delete={() =>
+                                      this.handleDeleteProduct(product._id)
+                                    }
+                                    edit={() => this.handleEditProduct(product)}
+                                  />
+                                </motion.div>
+                              ))}
+                            </motion.div>
+                          </div>
+                        </AnimatePresence>
+                      )}
+                    </div>
 
-              {editDialog && (
-                <DialogDemo
-                  isOpen={true}
-                  product={editingProduct}
-                  onClose={() => this.setState({ editDialog: false })}
-                  handleSave={() => this.submitEditProduct()}
-                  onChange={(e, field) => this.handleProductChange(e, field)}
-                />
-              )}
-            </main>
-          </SidebarProvider>
+                    {editDialog && (
+                      <DialogDemo
+                        isOpen={true}
+                        product={editingProduct}
+                        onClose={() => this.setState({ editDialog: false })}
+                        handleSave={() => this.submitEditProduct()}
+                        onChange={(e, field) =>
+                          this.handleProductChange(e, field)
+                        }
+                      />
+                    )}
+                  </AppLayout>
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
         </BrowserRouter>
       </AuthProvider>
     );

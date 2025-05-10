@@ -41,22 +41,33 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
   // Check if user is already logged in on component mount
   useEffect(() => {
-    const token = localStorage.getItem("userToken");
-    const name = localStorage.getItem("userName");
-    const email = localStorage.getItem("userEmail");
-    const role = localStorage.getItem("userRole");
-    const isVerified = localStorage.getItem("userVerified");
+    const loadUserFromStorage = () => {
+      const token = localStorage.getItem("userToken");
+      const name = localStorage.getItem("userName");
+      const email = localStorage.getItem("userEmail");
+      const role = localStorage.getItem("userRole");
+      const isVerified = localStorage.getItem("userVerified");
 
-    if (token && name && email) {
-      setUser({
-        name,
-        email,
-        token,
-        role: role || "user",
-        isVerified: isVerified === "true",
-      });
-      setIsAuthenticated(true);
-    }
+      if (token && name && email) {
+        console.log("Found user data in localStorage, restoring session");
+
+        // Set the user data from localStorage
+        setUser({
+          name,
+          email,
+          token,
+          role: role || "user",
+          isVerified: isVerified === "true",
+        });
+        setIsAuthenticated(true);
+      } else {
+        console.log("No user data found in localStorage");
+        setIsAuthenticated(false);
+        setUser(null);
+      }
+    };
+
+    loadUserFromStorage();
   }, []);
 
   const login = (userData: {
@@ -86,7 +97,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     console.log("User after login:", userData); // Debug log
   };
 
-  const logout = () => {
+  const logout = React.useCallback(() => {
     localStorage.removeItem("userToken");
     localStorage.removeItem("userName");
     localStorage.removeItem("userEmail");
@@ -94,7 +105,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     localStorage.removeItem("userVerified");
     setUser(null);
     setIsAuthenticated(false);
-  };
+  }, []);
 
   return (
     <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>

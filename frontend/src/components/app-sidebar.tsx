@@ -1,17 +1,14 @@
 import * as React from "react";
-import { useState, useEffect } from "react";
 import {
   CheckSquare,
   PlusCircle,
   ClipboardList,
-  Home,
   Settings,
   User,
   Database,
   LogOut,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { toast } from "@/hooks/use-toast";
 
 import { NavMain } from "@/components/nav-main";
 import { SidebarOptInForm } from "@/components/sidebar-opt-in-form";
@@ -30,12 +27,6 @@ import { Badge } from "@/components/ui/badge";
 // Updated navigation data with icons
 const data = {
   navMain: [
-    {
-      title: "Home",
-      url: "/",
-      icon: Home,
-      items: [],
-    },
     {
       title: "Tasks",
       url: "/tasks",
@@ -60,160 +51,12 @@ const data = {
       requiresAuth: true,
       items: [],
     },
-    {
-      title: "API Docs",
-      url: "http://localhost:7777/api-docs/",
-      icon: Database,
-      external: true,
-      items: [],
-    },
   ],
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { isAuthenticated, user, logout } = useAuth();
-  const [isSequelize, setIsSequelize] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-
-  // Fetch current database type on component mount
-  useEffect(() => {
-    fetchDatabaseType();
-  }, []);
-
-  // Fetch the current database type from the backend
-  const fetchDatabaseType = async () => {
-    try {
-      const response = await fetch("http://localhost:7777/api/system/db-type");
-      const data = await response.json();
-
-      if (data.success) {
-        setIsSequelize(data.data.type === "sequelize");
-      }
-    } catch (error) {
-      console.error("Error fetching database type:", error);
-    }
-  };
-
-  // Toggle the database type
-  const handleToggle = async () => {
-    // Prevent multiple clicks
-    if (isLoading) return;
-
-    setIsLoading(true);
-
-    // Show initial toast
-    toast({
-      title: "Changing Database",
-      description: `Switching to ${
-        !isSequelize ? "Sequelize" : "MongoDB"
-      }. Please wait...`,
-    });
-
-    try {
-      const response = await fetch(
-        "http://localhost:7777/api/system/toggle-db",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("userToken")}`,
-          },
-          body: JSON.stringify({ useSequelize: !isSequelize }),
-        }
-      );
-
-      const data = await response.json();
-
-      if (data.success) {
-        // Update local state
-        setIsSequelize(!isSequelize);
-
-        // Show success message
-        toast({
-          title: "Database Changed",
-          description: `Switched to ${
-            !isSequelize ? "Sequelize" : "MongoDB"
-          } successfully. The server is restarting.`,
-        });
-
-        // Show countdown toast
-        let countdown = 10;
-        const countdownInterval = setInterval(() => {
-          countdown--;
-          if (countdown <= 0) {
-            clearInterval(countdownInterval);
-            window.location.reload();
-          } else {
-            toast({
-              title: "Reloading Soon",
-              description: `Page will reload in ${countdown} seconds...`,
-            });
-          }
-        }, 1000);
-      } else {
-        toast({
-          title: "Error",
-          description: data.message || "Failed to toggle database",
-          variant: "destructive",
-        });
-        setIsLoading(false);
-      }
-    } catch (error) {
-      console.error("Error toggling database:", error);
-
-      // The server might be restarting, so we'll show a more helpful message
-      toast({
-        title: "Server Restarting",
-        description: "The server is restarting. Please wait a moment...",
-      });
-
-      // Try to reconnect multiple times with increasing delays
-      let attempts = 0;
-      const maxAttempts = 5;
-      const checkServer = () => {
-        attempts++;
-        setTimeout(() => {
-          fetch("http://localhost:7777/api/system/db-type")
-            .then((response) => {
-              if (response.ok) {
-                toast({
-                  title: "Server Back Online",
-                  description: "Reloading page...",
-                });
-                setTimeout(() => window.location.reload(), 1000);
-              } else if (attempts < maxAttempts) {
-                toast({
-                  title: "Still Waiting",
-                  description: `Attempt ${attempts}/${maxAttempts}: Server not ready yet...`,
-                });
-                checkServer();
-              } else {
-                toast({
-                  title: "Reload Required",
-                  description: "Please reload the page manually.",
-                  variant: "destructive",
-                });
-                setIsLoading(false);
-              }
-            })
-            .catch(() => {
-              if (attempts < maxAttempts) {
-                checkServer();
-              } else {
-                toast({
-                  title: "Reload Required",
-                  description: "Please reload the page manually.",
-                  variant: "destructive",
-                });
-                setIsLoading(false);
-              }
-            });
-        }, attempts * 2000); // Increasing delay: 2s, 4s, 6s, 8s, 10s
-      };
-
-      checkServer();
-    }
-  };
+  // No database toggle needed as we only use MongoDB
 
   return (
     <Sidebar className="border-r border-gray-200 bg-white" {...props}>
@@ -222,7 +65,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <a
-                href="/"
+                href="/tasks"
                 className="flex items-center gap-3 px-2 py-1 rounded-lg hover:bg-blue-50 transition-colors"
               >
                 <div className="flex aspect-square size-10 items-center justify-center rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm">
@@ -235,7 +78,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   <div className="flex items-center gap-1.5">
                     <Database className="h-3 w-3 text-blue-500" />
                     <span className="text-xs text-gray-500">
-                      {isSequelize ? "Sequelize Powered" : "MongoDB Powered"}
+                      MongoDB Powered
                     </span>
                   </div>
                 </div>
@@ -245,9 +88,56 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
           {isAuthenticated && (
             <SidebarMenuItem className="mt-2">
-              <div className="px-2 py-1 text-sm text-gray-600">
-                Logged in as:{" "}
-                <span className="font-semibold">{user?.name}</span>
+              <div className="px-2 py-2 bg-blue-50 rounded-md border border-blue-100">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-600 to-indigo-600 flex items-center justify-center text-white font-bold">
+                    {user?.name?.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <div className="font-medium text-blue-800">
+                      {user?.name}
+                    </div>
+                    <div className="text-xs text-blue-600">{user?.email}</div>
+                  </div>
+                </div>
+                {user?.isVerified ? (
+                  <div className="text-xs flex items-center gap-1 text-green-600 mt-1">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                      <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                    Verified Account
+                  </div>
+                ) : (
+                  <div className="text-xs flex items-center gap-1 text-amber-600 mt-1">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="12"
+                      height="12"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                      <line x1="12" y1="9" x2="12" y2="13"></line>
+                      <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                    Verification Pending
+                  </div>
+                )}
               </div>
             </SidebarMenuItem>
           )}
@@ -285,72 +175,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 </div>
               )}
 
-              {/* Database toggle - only visible to admins */}
-              {user?.role === "admin" && (
-                <div className="mb-4 p-4 bg-white rounded-lg shadow-sm border border-gray-200">
-                  <div className="flex items-center justify-between mb-3">
-                    <p className="text-sm font-medium text-gray-700">
-                      Database Engine
-                    </p>
-                    <span
-                      className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                        isSequelize
-                          ? "bg-green-100 text-green-800"
-                          : "bg-blue-100 text-blue-800"
-                      }`}
-                    >
-                      {isSequelize ? "Sequelize (SQL)" : "MongoDB (NoSQL)"}
-                    </span>
-                  </div>
-
-                  <div className="text-xs text-gray-500 mb-3">
-                    <p>
-                      Switching database engines will restart the server. This
-                      may take a few moments.
-                    </p>
-                  </div>
-
-                  <button
-                    className={`w-full py-2 px-4 rounded-md transition-colors ${
-                      isLoading
-                        ? "bg-gray-400 text-white cursor-not-allowed"
-                        : isSequelize
-                        ? "bg-blue-600 text-white hover:bg-blue-700"
-                        : "bg-green-600 text-white hover:bg-green-700"
-                    }`}
-                    onClick={handleToggle}
-                    disabled={isLoading}
-                  >
-                    {isLoading ? (
-                      <span className="flex items-center justify-center">
-                        <svg
-                          className="animate-spin -ml-1 mr-2 h-4 w-4"
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                          ></circle>
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          ></path>
-                        </svg>
-                        Switching database...
-                      </span>
-                    ) : (
-                      <>Switch to {isSequelize ? "MongoDB" : "Sequelize"}</>
-                    )}
-                  </button>
-                </div>
-              )}
+              {/* MongoDB is the only database used in this application */}
             </>
           ) : (
             <SidebarOptInForm />

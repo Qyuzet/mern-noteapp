@@ -36,10 +36,14 @@ export const useProductStore = create<ProductStore>((set) => ({
     }
 
     try {
-      const res = await fetch("http://localhost:7777/api/products", {
+      // Get token from localStorage
+      const token = localStorage.getItem("userToken");
+
+      const res = await fetch("http://localhost:7778/api/products", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : "",
         },
         body: JSON.stringify(newProduct),
       });
@@ -61,10 +65,19 @@ export const useProductStore = create<ProductStore>((set) => ({
 
   fetchProducts: async () => {
     try {
-      const res = await fetch("http://localhost:7777/api/products");
+      // Get token from localStorage
+      const token = localStorage.getItem("userToken");
+
+      const res = await fetch("http://localhost:7778/api/products", {
+        headers: {
+          Authorization: token ? `Bearer ${token}` : "",
+        },
+      });
+
       if (!res.ok) {
         throw new Error(`HTTP error! Status: ${res.status}`);
       }
+
       const data = await res.json();
       set({ products: data.data });
     } catch (error) {
@@ -75,8 +88,14 @@ export const useProductStore = create<ProductStore>((set) => ({
 
   deleteProduct: async (pid) => {
     try {
-      const res = await fetch(`http://localhost:7777/api/products/${pid}`, {
+      // Get token from localStorage
+      const token = localStorage.getItem("userToken");
+
+      const res = await fetch(`http://localhost:7778/api/products/${pid}`, {
         method: "DELETE",
+        headers: {
+          Authorization: token ? `Bearer ${token}` : "",
+        },
       });
 
       const data = await res.json();
@@ -97,10 +116,14 @@ export const useProductStore = create<ProductStore>((set) => ({
 
   updateProduct: async (pid, updatedProduct) => {
     try {
-      const res = await fetch(`http://localhost:7777/api/products/${pid}`, {
+      // Get token from localStorage
+      const token = localStorage.getItem("userToken");
+
+      const res = await fetch(`http://localhost:7778/api/products/${pid}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
+          Authorization: token ? `Bearer ${token}` : "",
         },
         body: JSON.stringify(updatedProduct),
       });
@@ -114,7 +137,10 @@ export const useProductStore = create<ProductStore>((set) => ({
         ),
       }));
 
-      return { success: true, message: data.data };
+      return {
+        success: true,
+        message: data.message || "Task updated successfully",
+      };
     } catch (error) {
       console.error("Error updating product:", error);
       return { success: false, message: "Network error. Please try again." };
